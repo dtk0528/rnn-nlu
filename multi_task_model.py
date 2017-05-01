@@ -47,13 +47,13 @@ class MultiTaskModel(object):
         fw_single_cell = tf.contrib.rnn.GRUCell(size)
         bw_single_cell = tf.contrib.rnn.GRUCell(size)
         if use_lstm:
-            fw_single_cell = tf.contrib.rnn.BasicLSTMCell(size, reuse=tf.get_variable_scope().reuse)
-            bw_single_cell = tf.contrib.rnn.BasicLSTMCell(size, reuse=tf.get_variable_scope().reuse)
+            fw_single_cell = tf.contrib.rnn.BasicLSTMCell(size)
+            bw_single_cell = tf.contrib.rnn.BasicLSTMCell(size)
         cell_fw = fw_single_cell
         cell_bw = bw_single_cell
         if num_layers > 1:
-            cell_fw = tf.contrib.rnn.MultiRNNCell([fw_single_cell] * num_layers)
-            cell_bw = tf.contrib.rnn.MultiRNNCell([bw_single_cell] * num_layers)
+            cell_fw = tf.contrib.rnn.MultiRNNCell([fw_single_cell for _ in range(num_layers)])
+            cell_bw = tf.contrib.rnn.MultiRNNCell([bw_single_cell for _ in range(num_layers)])
 
         if not forward_only and dropout_keep_prob < 1.0:
             cell_fw = tf.contrib.rnn.DropoutWrapper(cell_fw,
