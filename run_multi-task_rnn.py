@@ -44,7 +44,7 @@ tf.app.flags.DEFINE_integer("max_train_data_size", 0,
                             "Limit on the size of training data (0: no limit).")
 tf.app.flags.DEFINE_integer("steps_per_checkpoint", 300,
                             "How many training steps to do per checkpoint.")
-tf.app.flags.DEFINE_integer("max_training_steps", 10000,
+tf.app.flags.DEFINE_integer("max_training_steps", 30000,
                             "Max training steps.")
 tf.app.flags.DEFINE_integer("max_test_data_size", 0,
                             "Max size of test set.")
@@ -121,8 +121,8 @@ def get_perf(filename):
                             stdin=subprocess.PIPE,
                             stdout=subprocess.PIPE)
 
-    stdout, _ = proc.communicate(''.join(open(filename).readlines()))
-    for line in stdout.split('\n'):
+    stdout, _ = proc.communicate(''.join(open(filename).readlines()).encode('utf8'))
+    for line in stdout.decode('utf8').split('\n'):
         if 'accuracy' in line:
             out = line.split()
             break
@@ -261,6 +261,11 @@ def train():
 
         best_valid_score = 0
         best_test_score = 0
+        valid_accuracy_list = []
+        test_accuracy_list = []
+        valid_f1_list = []
+        test_f1_list = []
+
         while model.global_step.eval() < FLAGS.max_training_steps:
             random_number_01 = np.random.random_sample()
             bucket_id = min([i for i in xrange(len(train_buckets_scale))
@@ -379,6 +384,23 @@ def train():
                     subprocess.call(['mv', current_taging_test_out_file,
                                      current_taging_test_out_file + '.best_f1_%.2f' % best_test_score])
 
+                valid_accuracy_list.append(valid_accuracy)
+                test_accuracy_list.append(test_accuracy)
+                valid_f1_list.append(valid_tagging_result)
+                test_f1_list.append(test_tagging_result)
+
+        with open('valid_accracy', 'a') as file:
+            for accu in valid_accuracy_list:
+                file.write('{}\n'.format(accu))
+        with open('test_accracy', 'a') as file:
+            for accu in test_accuracy_list:
+                file.write('{}\n'.format(accu))
+        with open('valid_f1score', 'a') as file:
+            for fone in valid_f1_list:
+                file.write('{}\n'.format(fone))
+        with open('valid_f1score', 'a') as file:
+            for fone in test_f1_list:
+                file.write('{}\n'.format(fone))
 
 def main(_):
     train()
